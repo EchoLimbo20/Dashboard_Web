@@ -1,0 +1,17 @@
+[theme]
+base = "dark"
+
+# Fundo principal — preto azulado
+backgroundColor = "#0A0A0F"
+
+# Fundo dos cards, sidebar, inputs
+secondaryBackgroundColor = "#13131E"
+
+# Cor primária — o roxo/violeta das bolinhas
+primaryColor = "#7B7FF5"
+
+# Texto padrão — branco frio
+textColor = "#E8E6FF"
+
+# Fonte — system-ui pra ficar limpo igual Inter
+font = "Inter"
