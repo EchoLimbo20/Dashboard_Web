@@ -1,12 +1,10 @@
 # Dashboard de Vendas
 
-Breve, bonito e direto — dashboard de vendas construído com Python e bibliotecas comuns (veja `requirements.txt`).
+Dashboard de vendas construído com Python e bibliotecas comuns (veja `requirements.txt`).
 
 ---
 
 ## Visual
-
-Visão geral do dashboard (substitua os arquivos em `docs/` pelos prints enviados):
 
 ![Visão Geral](docs/screenshot-1.png)
 **Visão Geral** — Tela principal com mapa, séries temporais e top vendedores.
