@@ -27,6 +27,3 @@ Dashboard de vendas construído com Python e bibliotecas comuns (veja `requireme
 - `data center.json` — dados de exemplo
 - `requirements.txt` — dependências
 ---
-
-Se quiser, faço o commit desta alteração e adiciono os prints diretamente no repositório.
-
