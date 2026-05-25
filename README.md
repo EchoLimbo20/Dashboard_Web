@@ -9,8 +9,10 @@ Breve, bonito e direto — dashboard de vendas construído com Python e bibliote
 Visão geral do dashboard (substitua os arquivos em `docs/` pelos prints enviados):
 
 ![Visão Geral](docs/screenshot-1.png)
+**Visão Geral** — Tela principal com mapa, séries temporais e top vendedores.
 
 ![Regiões](docs/screenshot-2.png)
+**Desempenho por Região** — Ranking de estados e tabela de detalhes.
 
 ---
 
