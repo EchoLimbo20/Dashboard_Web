@@ -2,7 +2,7 @@
 base = "dark"
 
 # Fundo principal — preto azulado
-backgroundColor = "#0A0A0F"
+backgroundColor = "#000000"
 
 # Fundo dos cards, sidebar, inputs
 secondaryBackgroundColor = "#13131E"

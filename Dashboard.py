@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 from pandasql import sqldf
 from streamlit_lottie import st_lottie
+import plotly.graph_objects as go
 
 #SETUP
 st.set_page_config(
@@ -18,6 +19,15 @@ st.markdown("""
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
+
+# PALETA DE CORES - Brand moderna com status indicators
+CORES_PALETA = [
+    '#7B7FF5',  # Roxo primário (brand)
+    '#FF006E',  # Rosa forte
+    "#FC4F9A",  # Cyan vibrante
+    "#FFA10A",
+    "#FFCA0B",  # Amarelo destaque
+]
 
 #FUNÇÕES
 def format_num(valor, prefixo=''):
@@ -100,6 +110,29 @@ GROUP BY "Local da compra"
 """
 mapa_dados = sqldf(q_mapa, locals())
 
+# Query para Top 10 vendedores (estados) - para pie
+q_top10_vendedores = """
+SELECT 
+    "Vendedor" as vendedor,
+    SUM(Preço) as value
+FROM dados
+GROUP BY "Local da compra"
+ORDER BY value DESC
+LIMIT 10
+"""
+top10_vendedores = sqldf(q_top10_vendedores, locals())
+
+q_compras_por_estado = """
+SELECT
+    "Local da compra" as estado,
+    SUM(Preço) as receita
+FROM dados
+GROUP BY "Local da compra"
+ORDER BY receita DESC
+LIMIT 20
+"""
+compras_por_estado =sqldf(q_compras_por_estado, locals())
+
 # Formatar receita e quantidade usando format_num
 mapa_dados['Receita'] = mapa_dados['receita'].apply(lambda x: format_num(x, 'R$'))
 mapa_dados['Quantidade'] = mapa_dados['quantidade'].apply(lambda x: format_num(x))
@@ -116,11 +149,12 @@ fig_mapa_receita = px.scatter_geo(mapa_dados,
                                   hover_data={'Receita': True, 'Quantidade': True, 'lat': False, 'lon': False, 'receita': False, 'quantidade': False},
                                   title='Receita por estado',
                                   color='receita',
-                                  size_max=50
+                                  color_continuous_scale=CORES_PALETA,
+                                  size_max=80
                                   )
 
 fig_mapa_receita.update_layout(
-    height=730,
+    height=860,
     margin=dict(l=0, r=0, t=30, b=0),
     clickmode='event+select'
 )
@@ -137,17 +171,57 @@ fig_receita_mensal = px.line(receita_mensal,
                              line_shape='linear',
                              template='plotly_dark',
                              title='Receita por Mês',
-                             labels={'mes': 'Mês', 'receita': 'Receita (R$)', 'ano': 'Ano'}
+                             labels={'mes': 'Mês', 'receita': 'Receita (R$)', 'ano': 'Ano'},
+                             color_discrete_sequence=CORES_PALETA
                              )
 
 # Customizar layout do gráfico mensal
 fig_receita_mensal.update_layout(
-    height=420,
+    height=400,
+    title_font_size=20,
     hovermode='x unified',
     margin=dict(l=0, r=0, t=30, b=0),
     clickmode='event+select'
 )
 fig_receita_mensal.update_traces(marker=dict(size=10, opacity=0.8), selected=dict(marker=dict(size=15, opacity=1)))
+
+# PIE CHART TOP 10 VENDEDORES
+fig_pie = px.pie(
+    top10_vendedores,
+    names='vendedor',
+    values='value',
+    template='plotly_dark',
+    title='Top 10 Vendedores',
+    color_discrete_sequence=CORES_PALETA
+)
+fig_pie.update_layout(
+    title_font_size=20,
+    height=360,
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+fig_pie.update_traces(hoverinfo='label+percent', textinfo='percent', textfont_size=18,
+                  marker=dict(colors=CORES_PALETA, line=dict(color="#333333", width=1)))
+
+fig_bar_estados = px.bar(
+    compras_por_estado,
+    y='receita',
+    x='estado',
+    text_auto='.2s',
+    title="Desempenho de Vendas por Região",
+    template='plotly_dark',
+    labels={'estado': 'Estado', 'receita': 'Receita (R$)'},
+    color='receita',
+    color_continuous_scale=CORES_PALETA)
+
+fig_bar_estados.update_layout(
+    hovermode='x unified',
+    title_font_size=15,
+    height=500,
+    margin=dict(l=0, r=0, t=40, b=0)
+)
+fig_bar_estados.update_traces(textfont_size=18)
+
 # INTERFACE
 col1, col2 = st.columns([1.1, 0.9])
 
@@ -158,7 +232,7 @@ with col1:
 with col2:
     lottie_data = carregar_lottie('https://lottie.host/38267cdd-483d-4709-8803-b3f2828e4960/fSGX5sLHJc.json')
     st_lottie(lottie_data, height=350, speed=2, loop=True)
-
+st.markdown("---")
 # Métricas
 col1, col2 = st.columns(2)
 
@@ -169,6 +243,16 @@ with col1:
 with col2:
     st.metric('Quantidade de vendas', format_num(total_vendas))
     st.plotly_chart(fig_receita_mensal, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
+st.markdown("### Desempenho de Vendas por Região")
+st.markdown("""
+<p style="font-family: 'Noto Sans Mono', monospace; font-size: 1.1rem; font-weight: 100;">
+    Os estados com maior receita concentram-se no <b>Sudeste</b> e <b>Centro-Oeste</b>.
+    O ranking ao lado detalha o faturamento por estado, do menor para o maior.
+</p>
+""", unsafe_allow_html=True)
 
+# 2 PARTE
+st.plotly_chart(fig_bar_estados, use_container_width=True, config={'displayModeBar': False})
 # Dados
 st.dataframe(tabela_dados)
