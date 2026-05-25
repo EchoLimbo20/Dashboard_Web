@@ -20,11 +20,11 @@ st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
 
-# PALETA DE CORES - Brand moderna com status indicators
+# PALETA DE CORES
 CORES_PALETA = [
-    '#7B7FF5',  # Roxo primário (brand)
+    "#6D6DED",  # Roxo primário (brand)
     '#FF006E',  # Rosa forte
-    "#FC4F9A",  # Cyan vibrante
+    "#FC4F9A",
     "#FFA10A",
     "#FFCA0B",  # Amarelo destaque
 ]
@@ -54,6 +54,21 @@ def carregar_lottie(url):
     return requests.get(url).json()
 
 dados = carregar_dados()
+
+with st.sidebar:
+    st.header("Filtros")
+    anos = st.multiselect("Ano",
+        options=sorted(dados['Data da Compra'].dt.year.unique()),
+        key="filtro_ano")
+    cats = st.multiselect("Categoria",
+        options=sorted(dados['Categoria do Produto'].unique()),
+        key="filtro_categoria")
+    
+df = dados.copy()
+if anos:
+    dados = dados[dados['Data da Compra'].dt.year.isin(anos)]
+if cats:
+    dados = dados[dados['Categoria do Produto'].isin(cats)]
 
 # QUERIES SQL
 q_receita_total = """
@@ -96,6 +111,7 @@ GROUP BY strftime('%Y', "Data da Compra"), strftime('%m', "Data da Compra")
 ORDER BY ano, mes
 """
 receita_mensal = sqldf(q_receita_mensal, locals())
+receita_mensal['mes'] = receita_mensal['mes'].astype(int)
 
 # Agregar dados por estado para o mapa
 q_mapa = """
@@ -116,7 +132,7 @@ SELECT
     "Vendedor" as vendedor,
     SUM(Preço) as value
 FROM dados
-GROUP BY "Local da compra"
+GROUP BY "vendedor"
 ORDER BY value DESC
 LIMIT 10
 """
@@ -227,32 +243,35 @@ col1, col2 = st.columns([1.1, 0.9])
 
 with col1:
     st.markdown("""<h1 style="font-family: 'Noto Sans Mono', monospace; font-size: 5rem; text-align: left; font-weight: 200; margin: 0; padding: 0; letter-spacing: -1px;"><span style="border-bottom: 3px solid #7B7FF5;">Dashboard</span> de <span style="font-weight: 900; font-style: italic; background: linear-gradient(135deg, #7B7FF5, #B0C4DE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Vendas</span></h1>""", unsafe_allow_html=True)
-    st.markdown("""<h3 style="font-family: 'Noto Sans Mono', monospace; font-size: 1.2rem; text-align: left; font-weight: 100; margin: 0; padding: 0; letter-spacing: 0px;"><span style="border-bottom: 2px dotted #ffffff;">construído com python, sql e <span style="font-style: italic; color: #7B7FF5;">curiosidade</span>.</span></h3>""", unsafe_allow_html=True)
-
+    st.markdown("""<h2 style="font-family: 'Inter', sans-serif; font-size: 1.1rem; text-align: left; font-weight: 100; margin: 0; background: #F7F7FF0; border-radius: 5px; padding: 5px; letter-spacing: 0px;"><span style="border-bottom: 1.3px;">construído com python, sql e <span style="font-style: italic; color: #FF006E;">curiosidade</span>.</span></h2>""", unsafe_allow_html=True)
 with col2:
     lottie_data = carregar_lottie('https://lottie.host/38267cdd-483d-4709-8803-b3f2828e4960/fSGX5sLHJc.json')
     st_lottie(lottie_data, height=350, speed=2, loop=True)
-st.markdown("---")
-# Métricas
-col1, col2 = st.columns(2)
 
-with col1:
-    st.metric('Receita', format_num(receita_total, 'R$'))
-    st.plotly_chart(fig_mapa_receita, use_container_width=True, config={'displayModeBar': False})
+# TABS
+tab1, tab2= st.tabs(["📊 Visão Geral", "🗺️ Regiões"])
 
-with col2:
-    st.metric('Quantidade de vendas', format_num(total_vendas))
-    st.plotly_chart(fig_receita_mensal, use_container_width=True, config={'displayModeBar': False})
-    st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
-st.markdown("### Desempenho de Vendas por Região")
-st.markdown("""
-<p style="font-family: 'Noto Sans Mono', monospace; font-size: 1.1rem; font-weight: 100;">
-    Os estados com maior receita concentram-se no <b>Sudeste</b> e <b>Centro-Oeste</b>.
-    O ranking ao lado detalha o faturamento por estado, do menor para o maior.
-</p>
-""", unsafe_allow_html=True)
+with tab1:
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric('Receita', format_num(receita_total, 'R$'))
+        st.plotly_chart(fig_mapa_receita, use_container_width=True, config={'displayModeBar': False})
+    with col2:
+        st.metric('Quantidade de vendas', format_num(total_vendas))
+        st.plotly_chart(fig_receita_mensal, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
 
-# 2 PARTE
-st.plotly_chart(fig_bar_estados, use_container_width=True, config={'displayModeBar': False})
-# Dados
-st.dataframe(tabela_dados)
+with tab2:
+    st.markdown("# Desempenho de Vendas por Região")
+    st.markdown("""
+    <p style="font-family: 'Noto Sans Mono', monospace; font-size: 1.1rem; font-weight: 100;">
+        Os estados com maior receita concentram-se no <b>Sudeste</b> e <b>Sul</b>.
+        O ranking abaixo detalha o faturamento por estado, do maior para o menor.
+    </p>
+    """, unsafe_allow_html=True)
+    st.plotly_chart(fig_bar_estados, use_container_width=True, config={'displayModeBar': False})
+    
+    st.dataframe(
+        tabela_dados[['Produto', 'Categoria do Produto', 'Preço', 'Vendedor', 'Local da compra', 'Tipo de pagamento']],
+        use_container_width=True
+    )
