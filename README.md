@@ -5,12 +5,10 @@ Dashboard de vendas construído com Python e bibliotecas comuns (veja `requireme
 ---
 
 ## Visual
-![Regiões](docs/screenshot-2.png)
 ![Visão Geral](docs/screenshot-1.png)
 **Visão Geral** — Tela principal com mapa, séries temporais e top vendedores.
 
 ![Regiões](docs/screenshot-2.png)
-![Visão Geral](docs/screenshot-1.png)
 **Desempenho por Região** — Ranking de estados e tabela de detalhes.
 
 ---
